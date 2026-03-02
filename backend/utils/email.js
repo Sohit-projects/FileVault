@@ -1,5 +1,10 @@
 const nodemailer = require("nodemailer");
 const logger = require("./logger");
+const dns = require("dns");
+
+// FORCE IPV4 (VERY IMPORTANT)
+dns.setDefaultResultOrder("ipv4first");
+
 
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +48,9 @@ const createTransporter = async () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    connectionTimeout: 10000, // 10 seconds
+    connectionTimeout: 15000, // 10 seconds
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
   });
 };
 
