@@ -38,7 +38,7 @@ const createTransporter = async () => {
     pool: true,
     maxConnections: 5,
     maxMessages: 100,
-
+    family: 4, // Use IPv4 to avoid potential IPv6 issues
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -76,11 +76,6 @@ const waitForTransporter = async () => {
   return transporter;
 };
 
-/*
-|--------------------------------------------------------------------------
-| Get Ethereal Preview URL
-|--------------------------------------------------------------------------
-*/
 
 
 
