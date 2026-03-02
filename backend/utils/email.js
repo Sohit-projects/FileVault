@@ -48,9 +48,9 @@ const createTransporter = async () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    connectionTimeout: 15000, // 10 seconds
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
+    connectionTimeout: 25000, // 25 seconds
+    greetingTimeout: 25000,
+    socketTimeout: 25000,
   });
 };
 

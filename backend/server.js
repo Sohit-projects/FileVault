@@ -11,9 +11,14 @@ const { initCloudinary } = require('./config/cloudinary');
 const logger = require('./utils/logger');
 const File = require('./models/File');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const dns = require("dns");
+
+dns.setDefaultResultOrder("ipv4first");
+
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 const app = express();
+
 
 // Create logs directory
 if (!fs.existsSync(path.join(__dirname, 'logs'))) {
