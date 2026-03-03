@@ -9,16 +9,30 @@ It provides authentication, cloud storage integration, and email-based file shar
 
 ## 🚀 Features
 
-✅ User Authentication (Register / Login)
-✅ OTP Verification
+✅ Google Authentication (OAuth)
+
+✅ User Authentication (Register / Login) 
+
+✅ OTP Verification (on email)
+
 ✅ Forget Password
+
+✅ Update Profile
+
 ✅ Secure File Upload & Storage
+
 ✅ Cloud Storage using Cloudinary
+
 ✅ PDF/File Preview Support
+
 ✅ Download & Access Control
+
 ✅ RESTful API Architecture
+
 ✅ Environment-based Configuration
+
 ✅ Drag & Drop Upload
+
 ✅ Frontend Dashboard
 
 ---
@@ -63,11 +77,21 @@ FileVault/
 │   ├── routes/
 │   ├── middleware/
 │   ├── utils/
+|   ├── .env
 │   ├── server.js
 │   └── package.json
 │
-├── .env
+├── frontend/
+|   ├── build/
+|   ├── public/
+|   ├── src/
+|   ├── package-lock.json
+|   ├── package.json
+|   ├── postcss.config.js
+|   ├── .env
+|   └── tailwind.config.js
 ├── .gitignore
+├── package.json
 └── README.md
 ```
 
@@ -93,7 +117,7 @@ User → Backend API → Cloudinary Storage
 * JWT-based authentication
 * Protected API routes
 * Secure environment configuration
-* OTP vefication
+* OTP verification
 
 ---
 
