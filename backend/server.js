@@ -88,9 +88,19 @@ app.get('/health', (req, res) => {
   });
 });
 
+// ─── SERVE REACT FRONTEND ─────────────────────────────────────────────────
+const frontendPath = path.join(__dirname, '../frontend/build');
+app.use(express.static(frontendPath));
+
 // ─── ROUTES ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/files', require('./routes/files'));
+
+// ─── SPA FALLBACK ───────────────────────────────────────────────────────────
+// Serve React app for any unknown route (handles browser refresh on any route)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // ─── ERROR HANDLING ───────────────────────────────────────────────────────────
 app.use(notFound);
