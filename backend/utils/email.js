@@ -1,10 +1,5 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const logger = require("./logger");
-const dns = require("dns");
-
-// FORCE IPV4 (VERY IMPORTANT)
-dns.setDefaultResultOrder("ipv4first");
-
 
 /*
 |--------------------------------------------------------------------------
@@ -13,77 +8,47 @@ dns.setDefaultResultOrder("ipv4first");
 */
 
 const isEmailConfigured = () => {
-  // Check regular email config
-  return process.env.EMAIL_USER && 
-         process.env.EMAIL_PASS && 
-         process.env.EMAIL_HOST &&
-         process.env.EMAIL_USER !== 'your_email@gmail.com' &&
-         process.env.EMAIL_PASS !== 'your_app_password';
+  return process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 'your_resend_api_key';
 };
 
 /*
 |--------------------------------------------------------------------------
-| Create Transporter (Created ONCE ✅)
+| Create Resend Client (Created ONCE)
 |--------------------------------------------------------------------------
 */
 
-const createTransporter = async () => {
+const createResendClient = () => {
   if (!isEmailConfigured()) {
-    logger.warn('Email not configured. Set EMAIL_USER, EMAIL_PASS, EMAIL_HOST in .env');
+    logger.warn('Resend not configured. Set RESEND_API_KEY in .env');
     return null;
   }
 
-  // Production/SMTP configuration
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: Number(process.env.EMAIL_PORT) === 465, // Use TLS for 465, otherwise STARTTLS
-
-    // Production optimization
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    family: 4, // Use IPv4 to avoid potential IPv6 issues
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    
-  });
+  return new Resend(process.env.RESEND_API_KEY);
 };
 
-let transporter = null;
-let transporterReady = false;
+let resend = null;
+let resendReady = false;
 
-// Initialize transporter asynchronously
-const initTransporter = async () => {
-  transporter = await createTransporter();
-  transporterReady = true;
-  if (transporter) {
-    transporter.verify((error) => {
-      if (error) {
-        logger.error("Mail server connection failed:", error);
-      } else {
-        logger.info("Mail server ready ✅");
-      }
-    });
+// Initialize Resend client
+const initResend = () => {
+  resend = createResendClient();
+  resendReady = true;
+  if (resend) {
+    logger.info("Resend client initialized ✅");
   }
 };
 
-initTransporter();
+initResend();
 
-// Wait for transporter to be ready
-const waitForTransporter = async () => {
+// Wait for resend to be ready
+const waitForResend = async () => {
   let attempts = 0;
-  while (!transporterReady && attempts < 50) {
+  while (!resendReady && attempts < 50) {
     await new Promise(resolve => setTimeout(resolve, 100));
     attempts++;
   }
-  return transporter;
+  return resend;
 };
-
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -92,18 +57,16 @@ const waitForTransporter = async () => {
 */
 
 const sendOTPEmail = async ({ to, name, otp }) => {
-  // Wait for transporter to be ready if still initializing
-  if (!transporter) {
-    await waitForTransporter();
+  if (!resend) {
+    await waitForResend();
   }
   
-  if (!transporter) {
+  if (!resend) {
     logger.warn(`Email not configured. Would send OTP to ${to} (dev mode)`);
-    // In development, log the OTP so you can test without real email
     if (process.env.NODE_ENV === 'development') {
       logger.debug(`DEV MODE - OTP for ${to}: ${otp}`);
     }
-    return { success: true, previewUrl: null }; // Return success to allow flow to continue
+    return { success: true, previewUrl: null };
   }
 
   try {
@@ -149,7 +112,7 @@ const sendOTPEmail = async ({ to, name, otp }) => {
     </html>
     `;
 
-    const info = await transporter.sendMail({
+    const data = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'FileVault <noreply@filevault.com>',
       to,
       subject: `${otp} is your FileVault verification code`,
@@ -171,12 +134,11 @@ const sendOTPEmail = async ({ to, name, otp }) => {
 */
 
 const sendWelcomeEmail = async ({ to, name }) => {
-  // Wait for transporter to be ready if still initializing
-  if (!transporter) {
-    await waitForTransporter();
+  if (!resend) {
+    await waitForResend();
   }
   
-  if (!transporter) {
+  if (!resend) {
     logger.warn(`Email not configured. Would send welcome email to ${to} (dev mode)`);
     return { success: true, previewUrl: null };
   }
@@ -215,7 +177,7 @@ const sendWelcomeEmail = async ({ to, name }) => {
     </html>
     `;
 
-    const info = await transporter.sendMail({
+    const data = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'FileVault <noreply@filevault.com>',
       to,
       subject: "Welcome to FileVault!",
@@ -230,7 +192,6 @@ const sendWelcomeEmail = async ({ to, name }) => {
   }
 };
 
-
 /*
 |--------------------------------------------------------------------------
 | Send Password Reset Email
@@ -238,12 +199,11 @@ const sendWelcomeEmail = async ({ to, name }) => {
 */
 
 const sendPasswordResetEmail = async ({ to, name, otp }) => {
-  // Wait for transporter to be ready if still initializing
-  if (!transporter) {
-    await waitForTransporter();
+  if (!resend) {
+    await waitForResend();
   }
   
-  if (!transporter) {
+  if (!resend) {
     logger.warn(`Email not configured. Would send password reset to ${to} (dev mode)`);
     if (process.env.NODE_ENV === 'development') {
       logger.debug(`DEV MODE - Password reset OTP for ${to}: ${otp}`);
@@ -295,7 +255,7 @@ const sendPasswordResetEmail = async ({ to, name, otp }) => {
     </html>
     `;
 
-    const info = await transporter.sendMail({
+    const data = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'FileVault <noreply@filevault.com>',
       to,
       subject: `Reset your FileVault password`,
